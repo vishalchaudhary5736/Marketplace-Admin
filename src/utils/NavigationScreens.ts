@@ -5,6 +5,10 @@ export const NAVIGATION_SCREENS = {
   SIGN_UP: "/signup",
   FORGOT_PASSWORD: "/forgot-password",
   PASSWORD_RESET: "/reset-password",
+  DASHBOARD: "/dashboard",
+  TWO_FA_SETUP: "/2fa-setup",
+  TWO_FA_VERIFICATION: "/2fa-verification",
+  RECOVERY_CODE: "/recovery-code",
 };
 
 export function getNavigationScreen(nextStep: string) {
@@ -21,4 +25,7 @@ export const NAVIGATION_KEY = {
   SIGN_UP: "SIGN_UP",
   FORGOT_PASSWORD: "FORGOT_PASSWORD",
   PASSWORD_RESET: "PASSWORD_RESET",
+  TWO_FA_SETUP: "TWO_FA_SETUP",
+  TWO_FA_VERIFICATION: "TWO_FA_VERIFICATION",
+  DASHBOARD: "DASHBOARD",
 };

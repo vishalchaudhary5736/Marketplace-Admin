@@ -26,6 +26,7 @@ const authSlice = createSlice({
       state.tempToken = action.payload.tempToken;
       state.nextStep = action.payload.nextStep;
     },
+
     setCredentials: (
       state,
       action: PayloadAction<{
@@ -36,12 +37,15 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.accessToken = action.payload.accessToken;
     },
-    logout: (state) => {
+    removeCredentials: (state) => {
       state.accessToken = null;
       state.user = null;
+      state.tempToken = null;
+      state.nextStep = null;
     },
   },
 });
 
-export const { setCredentials, logout, setTempAuth } = authSlice.actions;
+export const { setCredentials, removeCredentials, setTempAuth } =
+  authSlice.actions;
 export default authSlice.reducer;

@@ -3,8 +3,48 @@ import LogoImage from "../assets/logo.png";
 import { TextField } from "../components/TextField";
 import { Button } from "../components/Button";
 import SecurityIcon from "../assets/security.png";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { LoginSchema, type LoginState } from "../schemas/auth";
+import { useLoginMutation } from "../services/authApi";
+import { useDispatch } from "react-redux";
+import { setTempAuth } from "../app/authSlice";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { getNavigationScreen } from "../utils/NavigationScreens";
 
 export function LoginPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginState>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const submitForm = async (value: LoginState) => {
+    try {
+      const apiResponse = await login(value).unwrap();
+      console.log("ApiResponse", apiResponse);
+      dispatch(
+        setTempAuth({
+          tempToken: apiResponse.data.tempToken,
+          nextStep: apiResponse.data.nextStep,
+        }),
+      );
+      toast.success(apiResponse.message);
+      navigate(getNavigationScreen(apiResponse.data.nextStep));
+    } catch (error: any) {
+      console.log("Login Error=>", error);
+      toast.error(error?.data?.message ?? error?.message ?? "Something went wrong");
+    }
+  };
+
   return (
     <AuthLayout>
       <div className="w-100 flex flex-col gap-5 ">
@@ -28,12 +68,18 @@ export function LoginPage() {
             <p className="text-[#A3ABB6] text-[14px]">Staff account only.</p>
           </div>
 
-          <form noValidate className="flex flex-col gap-5">
+          <form
+            noValidate
+            className="flex flex-col gap-5"
+            onSubmit={handleSubmit(submitForm)}
+          >
             <TextField
               id="email"
               type="email"
               label="Work email"
               placeholder="name@company.com"
+              {...register("email")}
+              error={errors.email?.message}
             />
 
             <TextField
@@ -41,8 +87,12 @@ export function LoginPage() {
               type="password"
               label="Password"
               placeholder="*******"
+              {...register("password")}
+              error={errors.password?.message}
             />
-            <Button type="submit">Continue</Button>
+            <Button type="submit">
+              {isSubmitting || isLoading ? "Loging...." : "Continue"}
+            </Button>
           </form>
         </div>
 

@@ -44,7 +44,7 @@ export type TwoFaSetupResponse = {
   data: {
     qrCode: string;
     otpauthUrl: string;
-    manualEnterKey: string;
+    manualEntryKey: string;
   };
 };
 
@@ -55,10 +55,10 @@ export type ConfirmTwoFaSetupResponse = {
     userDetail: User;
     accessToken: string;
     nextStep: string;
-  };
-  recoveryCode: {
-    message: String;
-    codes: string[];
+    recoveryCodes: {
+      message: String;
+      codes: string[];
+    };
   };
 };
 
@@ -68,6 +68,7 @@ export type TwoFaVerificationPayload = {
 
 export type TwoFaVerificationResponse = {
   success: boolean;
+  message: string;
   data: {
     message: string;
     userDetail: User;

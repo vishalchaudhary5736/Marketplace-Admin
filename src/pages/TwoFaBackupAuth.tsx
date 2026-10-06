@@ -1,12 +1,57 @@
 import { AuthLayout } from "../layouts/AuthLayout";
 import LogoImage from "../assets/logo.png";
 import { Button } from "../components/Button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import KeyIcon from "../assets/key.png";
 import { TextField } from "../components/TextField";
 import InfoIcon from "../assets/info.png";
+import { useForm } from "react-hook-form";
+import { useTwoFaBackupMutation } from "../services/authApi";
+import toast from "react-hot-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { RecoveryCodeSchema, type RecoveryCodeState } from "../schemas/auth";
+import { useDispatch } from "react-redux";
+import { removeCredentials, setCredentials } from "../app/authSlice";
+import {
+  getNavigationScreen,
+  NAVIGATION_SCREENS,
+} from "../utils/NavigationScreens";
 
 export function TwoFaBackup() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RecoveryCodeState>({
+    resolver: zodResolver(RecoveryCodeSchema),
+  });
+
+  const [recoveryCode, { isLoading }] = useTwoFaBackupMutation();
+
+  const SubmitCode = async (value: RecoveryCodeState) => {
+    try {
+      const apiResponse = await recoveryCode(value).unwrap();
+      toast.success(apiResponse.data.message);
+      dispatch(
+        setCredentials({
+          user: apiResponse.data.userDetail,
+          accessToken: apiResponse.data.accessToken,
+        }),
+      );
+      navigate(getNavigationScreen(apiResponse.data.nextStep));
+    } catch (error: any) {
+      console.error("TwoBackup Code Error=>", error);
+      toast.error(error?.data?.message);
+    }
+  };
+
+  const cancelVerification = () => {
+    dispatch(removeCredentials());
+    navigate(NAVIGATION_SCREENS.LOGIN_SCREEN, { replace: true });
+  };
+
   return (
     <AuthLayout>
       <div className="w-112.5 flex flex-col gap-5 ">
@@ -36,28 +81,42 @@ export function TwoFaBackup() {
             </p>
           </div>
 
-          <form noValidate className="flex flex-col  gap-6">
+          <form
+            noValidate
+            onSubmit={handleSubmit(SubmitCode)}
+            className="flex flex-col  gap-6"
+          >
             <div className="flex flex-col gap-2">
               <TextField
                 id="code"
                 placeholder="XXXX - XXXX"
                 label="Backup code"
                 className="h-13"
+                {...register("code")}
+                error={errors.code?.message}
               />
               <p className="text-[#A3ABB6] text-[14px]">
                 Each code works only once.
               </p>
             </div>
-            <Button type="submit">Verify and sign in</Button>
+            <Button type="submit">
+              {isLoading || isSubmitting
+                ? "Verifying..."
+                : "Verify and sign in"}
+            </Button>
           </form>
 
           <div className="flex justify-between items-center text-[13px]">
-            <Link to="/login" className="underline text-[#6385d5]">
+            <Link to="/2fa-verification" className="underline text-[#6385d5]">
               Use authenticator code instead
             </Link>
-            <Link to="/login" className="underline text-[#6385d5]">
+            <button
+              className="underline text-[#6385d5] cursor-pointer"
+              type="button"
+              onClick={cancelVerification}
+            >
               Cancel
-            </Link>
+            </button>
           </div>
         </div>
 
